@@ -8,19 +8,96 @@
       "description": "4KHDHub direct links",
       "version": "1.0.2",
       "author": "Nuvio Team",
-      "supportedTypes": [
-        "movie",
-        "tv"
-      ],
+      "supportedTypes": ["movie", "tv"],
       "filename": "providers/4khdhub.js",
       "enabled": true,
-      "formats": [
-        "mkv"
-      ],
+      "formats": ["mkv"],
       "logo": "https://www.google.com/s2/favicons?domain=4khdhub.click&sz=128",
-      "contentLanguage": [
-        "en"
-      ]
+      "contentLanguage": ["en"]
+    },
+    {
+      "id": "cinefreak",
+      "name": "CineFreak",
+      "description": "CineFreak direct links",
+      "version": "1.0.0",
+      "author": "Memerdexer",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/cinefreak.js",
+      "enabled": true,
+      "formats": ["mkv", "mp4"],
+      "contentLanguage": ["en", "hi"]
+    },
+    {
+      "id": "cinestream",
+      "name": "CineStream",
+      "description": "CineStream streaming links",
+      "version": "1.0.0",
+      "author": "Memerdexer",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/cinestream.js",
+      "enabled": true,
+      "formats": ["mkv", "mp4"],
+      "contentLanguage": ["en"]
+    },
+    {
+      "id": "dahmermovies-4k",
+      "name": "DahmerMovies 4K",
+      "description": "DahmerMovies 4K direct links",
+      "version": "1.0.0",
+      "author": "Memerdexer",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/dahmermovies-4k.js",
+      "enabled": true,
+      "formats": ["mkv"],
+      "contentLanguage": ["en"]
+    },
+    {
+      "id": "moviesdrive",
+      "name": "MoviesDrive",
+      "description": "MoviesDrive direct links",
+      "version": "1.0.0",
+      "author": "Memerdexer",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/moviesdrive.js",
+      "enabled": true,
+      "formats": ["mkv"],
+      "contentLanguage": ["en", "hi"]
+    },
+    {
+      "id": "movieshunt",
+      "name": "MoviesHunt",
+      "description": "MoviesHunt direct links",
+      "version": "1.0.0",
+      "author": "Memerdexer",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/movieshunt.js",
+      "enabled": true,
+      "formats": ["mkv", "mp4"],
+      "contentLanguage": ["en", "hi"]
+    },
+    {
+      "id": "showbox",
+      "name": "ShowBox",
+      "description": "ShowBox streaming links",
+      "version": "1.0.0",
+      "author": "Memerdexer",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/showbox.js",
+      "enabled": true,
+      "formats": ["mkv", "mp4"],
+      "contentLanguage": ["en"]
+    },
+    {
+      "id": "uhdmovies",
+      "name": "UHDMovies",
+      "description": "UHDMovies direct links",
+      "version": "1.0.0",
+      "author": "Memerdexer",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/uhdmovies.js",
+      "enabled": true,
+      "formats": ["mkv"],
+      "contentLanguage": ["en"]
     }
   ]
 }
