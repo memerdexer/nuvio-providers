@@ -1,3 +1,4 @@
+
 {
   "name": "Memerdexer's Repo",
   "version": "1.0.0",
@@ -20,6 +21,51 @@
       "logo": "https://www.google.com/s2/favicons?domain=4khdhub.click&sz=128",
       "contentLanguage": [
         "en"
+      ]
+    },
+    {
+      "id": "moviesdrive",
+      "name": "MoviesDrive",
+      "description": "MoviesDrive - Movies and TV shows with multiple streaming servers",
+      "version": "2.0.0",
+      "author": "JK",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "providers/moviesdrive.js",
+      "enabled": true,
+      "formats": [
+        "mp4",
+        "mkv",
+        "m3u8"
+      ],
+      "logo": "https://i.postimg.cc/bwDbhq9q/moviesdrive.png",
+      "contentLanguage": [
+        "en",
+        "hi"
+      ]
+    },
+    {
+      "id": "cinestream",
+      "name": "CineStream",
+      "description": "Multi Language Provider",
+      "version": "1.0.0",
+      "author": "Kabir",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "providers/cinestream.js",
+      "enabled": true,
+      "formats": [
+        "mp4",
+        "m3u8"
+      ],
+      "logo": "https://i.postimg.cc/0NhjWWqT/cinestream.png",
+      "contentLanguage": [
+        "en",
+        "hi"
       ]
     }
   ]
