@@ -258,51 +258,71 @@ function resolveRedirectUrl(redirectUrl) {
 }
 function extractSourceResults($, el) {
   return __async(this, null, function* () {
-    const localHtml = $(el).html();
-    const sizeMatch = localHtml.match(/([\d.]+ ?[GM]B)/);
-    const heightMatch = localHtml.match(/\d{3,}p/);
+    const localHtml = $(el).html() || "";
+    const sizeMatch = localHtml.match(/([\d.]+ ?[GM]B)/i);
+    const heightMatch = localHtml.match(/\d{3,}p/i);
     const title = $(el).find(".file-title, .episode-file-title").text().trim();
     let height = heightMatch ? parseInt(heightMatch[0]) : 0;
-    if (height === 0 && (title.includes("4K") || title.includes("4k") || localHtml.includes("4K") || localHtml.includes("4k"))) {
-      height = 2160;
-    }
+    if (!height && /4k|2160p/i.test(title + " " + localHtml)) height = 2160;
+
     const meta = {
       bytes: sizeMatch ? parseBytes(sizeMatch[1]) : 0,
       height,
       title
     };
-    const hubCloudLink = $(el).find("a").filter((_, a) => {
-      const text = $(a).text();
-      const href = $(a).attr("href") || "";
-      return text.includes("HubCloud") || href.includes("hubcloud.") || href.includes("hubcloud/");
-    }).attr("href");
-    if (hubCloudLink) {
-      const resolved = yield resolveRedirectUrl(hubCloudLink);
-      return { url: resolved, meta };
-    }
-    const hubDriveLink = $(el).find("a").filter((_, a) => {
-      const text = $(a).text();
-      const href = $(a).attr("href") || "";
-      return text.includes("HubDrive") || href.includes("hubdrive.") || href.includes("hubdrive/");
-    }).attr("href");
-    if (hubDriveLink) {
-      const resolvedDrive = yield resolveRedirectUrl(hubDriveLink);
-      if (resolvedDrive) {
-        const hubDriveHtml = yield fetchText(resolvedDrive);
-        if (hubDriveHtml) {
-          const $2 = cheerio2.load(hubDriveHtml);
-          const innerCloudLink = $2('a:contains("HubCloud")').attr("href") || $2("a").filter((_, a) => {
-            const text = $2(a).text();
-            const href = $2(a).attr("href") || "";
-            return text.includes("HubCloud") || href.includes("hubcloud.") || href.includes("hubcloud/");
-          }).attr("href");
-          if (innerCloudLink) {
-            return { url: innerCloudLink, meta };
+
+    const links = [];
+    const seen = new Set();
+    $(el).find("a[href]").each((_, a) => {
+      const href = $(a).attr("href");
+      const label = $(a).text().trim();
+      if (!href || href.startsWith("#") || href.startsWith("javascript:")) return;
+
+      const haystack = `${label} ${href}`.toLowerCase();
+      let source = null;
+      if (/hubcloud|pixelserver|10gbps/.test(haystack)) source = "HubCloud";
+      else if (/hubdrive/.test(haystack)) source = "HubDrive";
+      else if (/\bfsl\b|fsl\./.test(haystack)) source = "FSL";
+      else if (/pixeldrain/.test(haystack)) source = "PixelDrain";
+      else if (/gdflix/.test(haystack)) source = "GDFlix";
+      else if (/gofile/.test(haystack)) source = "GoFile";
+      else if (/workers\.dev|zipdisk/.test(haystack)) source = "ZipDisk";
+      else if (/r2\.dev|download file/.test(haystack)) source = "Direct R2";
+      else if (/drive\.google|gdrive|google drive/.test(haystack)) source = "Google Drive";
+
+      if (source && !seen.has(href)) {
+        seen.add(href);
+        links.push({ source, url: href, meta });
+      }
+    });
+
+    const results = [];
+    for (const link of links) {
+      if (link.source === "HubDrive") {
+        const driveUrl = yield resolveRedirectUrl(link.url);
+        const driveHtml = driveUrl ? yield fetchText(driveUrl) : null;
+        if (driveHtml) {
+          const $2 = cheerio2.load(driveHtml);
+          const innerLinks = [];
+          $2("a[href]").each((_, a) => {
+            const href = $2(a).attr("href");
+            const label = $2(a).text().trim();
+            if (href && /hubcloud|pixelserver|10gbps/i.test(`${label} ${href}`)) innerLinks.push(href);
+          });
+          for (const inner of innerLinks) {
+            results.push({ source: "HubCloud", url: inner, meta });
           }
         }
+      } else if (link.source === "HubCloud") {
+        const resolved = yield resolveRedirectUrl(link.url);
+        if (resolved) results.push({ source: "HubCloud", url: resolved, meta });
+      } else {
+        const resolved = yield resolveRedirectUrl(link.url);
+        if (resolved) results.push({ source: link.source, url: resolved, meta });
       }
     }
-    return null;
+
+    return results;
   });
 }
 function extractHubCloud(hubCloudUrl, baseMeta) {
@@ -400,22 +420,37 @@ function getStreams(tmdbId, type, season, episode) {
     console.log(`[4KHDHub] Processing ${itemsToProcess.length} items`);
     const streamPromises = itemsToProcess.map((item) => __async(this, null, function* () {
       try {
-        const sourceResult = yield extractSourceResults($, item);
-        if (sourceResult && sourceResult.url) {
-          console.log(`[4KHDHub] Extracting from HubCloud: ${sourceResult.url}`);
-          const extractedLinks = yield extractHubCloud(sourceResult.url, sourceResult.meta);
-          return extractedLinks.map((link) => ({
-            name: `4KHDHub - ${link.source}${sourceResult.meta.height ? ` ${sourceResult.meta.height}p` : ""}`,
-            title: `${link.meta.title}
-${formatBytes(link.meta.bytes || 0)}`,
-            url: link.url,
-            quality: sourceResult.meta.height ? `${sourceResult.meta.height}p` : void 0,
-            behaviorHints: {
-              bingeGroup: `4khdhub-${link.source}`
-            }
-          }));
+        const sourceResults = yield extractSourceResults($, item);
+        const itemStreams = [];
+        for (const sourceResult of sourceResults) {
+          let extractedLinks = [];
+          if (sourceResult.source === "HubCloud") {
+            console.log(`[4KHDHub] Extracting HubCloud servers: ${sourceResult.url}`);
+            extractedLinks = yield extractHubCloud(sourceResult.url, sourceResult.meta);
+          } else {
+            // Keep alternate hosts (including FSL) as separate provider streams.
+            extractedLinks = [{
+              source: sourceResult.source,
+              url: sourceResult.url,
+              meta: sourceResult.meta
+            }];
+          }
+
+          for (const link of extractedLinks) {
+            if (!link.url) continue;
+            itemStreams.push({
+              name: `4KHDHub - ${link.source}${sourceResult.meta.height ? ` ${sourceResult.meta.height}p` : ""}`,
+              title: `${link.meta.title || sourceResult.meta.title || ""}
+${formatBytes(link.meta.bytes || sourceResult.meta.bytes || 0)}`,
+              url: link.url,
+              quality: sourceResult.meta.height ? `${sourceResult.meta.height}p` : void 0,
+              behaviorHints: {
+                bingeGroup: `4khdhub-${link.source}`
+              }
+            });
+          }
         }
-        return [];
+        return itemStreams;
       } catch (err) {
         console.log(`[4KHDHub] Item processing error: ${err.message}`);
         return [];
